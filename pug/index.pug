@@ -1,0 +1,10 @@
+html
+  head
+    title Home Page
+    meta(charset='utf-8')
+  body
+    a(href='/'): h1 Home
+    ul
+      each topic in topics
+        li: h2= topic
+    a(href='/writingPost') Write Post
