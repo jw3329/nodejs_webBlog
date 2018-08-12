@@ -6,5 +6,15 @@ html
     a(href='/'): h1 Home
     ul
       each topic in topics
-        li: h2= topic
-    a(href='/writingPost') Write Post
+        li
+          a(href='/topic/' + topic.id)= topic.title
+    article
+      if topic
+        h2= topic.title
+        = topic.description
+        div= 'by' + topic.author
+      else
+        h2 Homepage
+        | NodeJs learning
+    div
+      a(href='/writingPost') New Topic
