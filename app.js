@@ -3,6 +3,8 @@ var app = express();
 var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var session = require('express-session');
+var bcrypt = require('bcrypt');
+const saltRounds = 10;
 var conn = mysql.createConnection({
   host:'localhost',
   user:'root',
@@ -89,21 +91,31 @@ app.post('/topic_receiver',function(req,res) {
 app.post('/loginCheck', function(req,res) {
   var uname = req.body.username;
   var pass = req.body.password;
-  var sql = 'SELECT * FROM users WHERE username = ? AND password = ?';
-  conn.query(sql,[uname,pass],function(err,rows,fields) {
+  var sql = 'SELECT * FROM users INNER JOIN passwordinfo ON users.passwordId = passwordinfo.id WHERE username = ?';
+  conn.query(sql,[uname],function(err,rows,fields) {
     if(err) {
       throwError(res,err);
     } else {
       if(rows.length === 0) {
-        res.send('no user or wrong username or password<p><a href="/signin">Sign in</a></p>');
+        res.send('no user or wrong username<p><a href="/signin">Sign in</a></p>');
       } else {
         var row = rows[0];
-        req.session.firstname = row.firstname;
-        req.session.lastname = row.lastname;
-        req.session.save(function() {
-          // console.log(req.session);
-          // res.send(req.session);
-          res.redirect('/welcome');
+        bcrypt.compare(pass,row.hash,function(err,result) {
+          if(err) {
+            throwError(res,err);
+          } else {
+            if(result) {
+              req.session.firstname = row.firstname;
+              req.session.lastname = row.lastname;
+              req.session.save(function() {
+                console.log(req.session);
+                // res.send(req.session);
+                res.redirect('/welcome');
+              });
+            } else {
+              res.send('wrong password<p><a href="/signin">Sign in</a></p>');
+            }
+          }
         });
       }
     }
@@ -150,16 +162,33 @@ app.get('/signup',function(req,res) {
 });
 
 app.post('/signup', function(req,res) {
-  var sql = 'INSERT INTO users (firstname,lastname,email,register,username,password) VALUES (?,?,?,NOW(),?,?)';
   var body = req.body;
-  conn.query(sql,[body.firstname,body.lastname,body.email,body.username,body.password],function(err,rows,fields) {
+  bcrypt.hash(body.password,saltRounds,function(err,hash) {
     if(err) {
-      throwError(res,err);
+      console.log('Error generating hash');
+      res.send('Server error generating hash');
     } else {
-      req.session.firstname = body.firstname;
-      req.session.lastname = body.lastname;
-      req.session.save(function() {
-        res.redirect('/welcome');
+      var sql = 'INSERT INTO passwordinfo (hash) VALUES (?)';
+      conn.query(sql,[hash],function(err,row,field) {
+        if(err) {
+          throwError(res,err);
+        } else {
+          var sql = 'SELECT id FROM passwordinfo WHERE hash = ?';
+          conn.query(sql,[hash],function(err2,rowId,fields2) {
+            var sql = 'INSERT INTO users (firstname,lastname,email,register,username,passwordId) VALUES (?,?,?,NOW(),?,?)';
+            conn.query(sql,[body.firstname,body.lastname,body.email,body.username,rowId[0].id],function(err3,rows,fields) {
+              if(err) {
+                throwError(res,err3);
+              } else {
+                req.session.firstname = body.firstname;
+                req.session.lastname = body.lastname;
+                req.session.save(function() {
+                  res.redirect('/welcome');
+                });
+              }
+            });
+          });
+        }
       });
     }
   });
