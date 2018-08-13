@@ -5,6 +5,11 @@ html
   body
     a(href='/'): h1 Home
     ul
+      li
+        a(href='/signin') Sign in
+      li
+        a(href='/signup') Sign up
+    ul
       each topic in topics
         li
           a(href='/topic/' + topic.id)= topic.title

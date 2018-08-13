@@ -1,0 +1,10 @@
+html
+  head
+    title Welcome page
+    meta(charset='utf-8')
+  body
+    a(href='/'): h1 Home
+    if firstname && lastname
+      h2 Welcome #{firstname}, #{lastname}
+    else
+      h2 Welcome

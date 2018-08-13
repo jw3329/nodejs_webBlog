@@ -1,0 +1,13 @@
+html
+  head
+    title Sign up
+    meta(charset='utf-8')
+  body
+    a(href='/'): h1 Home
+    form(action='/signup', method = 'post')
+      p: input(type='text' name='username' placeholder='username')
+      p: input(type='password' name='password' placeholder='password')
+      p: input(type='text' name='firstname' placeholder='firstname')
+      p: input(type='text' name='lastname' placeholder='lastname')
+      p: input(type='email' name='email' placeholder='email')
+      p: input(type='submit')

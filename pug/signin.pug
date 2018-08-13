@@ -1,0 +1,10 @@
+html
+  head
+    title Sign in
+    meta(charset='utf-8')
+  body
+    a(href='/'): h1 Home
+    form(action='/loginCheck', method = 'post')
+      p: input(type='text' name='username' placeholder='username')
+      p: input(type='password' name='password' placeholder='password')
+      p: input(type='submit')
