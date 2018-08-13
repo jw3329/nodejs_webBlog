@@ -121,6 +121,14 @@ app.get('/welcome', function(req,res) {
   }
 });
 
+app.get('/signout', function(req,res) {
+  delete req.session.firstname;
+  delete req.session.lastname;
+  req.session.save(function() {
+    res.redirect('/welcome');
+  });
+});
+
 // app.get('/welcome', function(req,res) {
 //   console.log(req);
 //   for(var i=0;i<100;i++)
