@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var session = require('express-session');
 var bcrypt = require('bcrypt');
+var fs = require('fs');
 const saltRounds = 10;
 var conn = mysql.createConnection({
   host:'localhost',
@@ -60,11 +61,19 @@ app.get(['/', '/topic/:id'], function(req, res){
         if(err){
           throwError(res,err);
         } else {
-          res.render('index', {topics:topics, topic:topic[0]});
+          if(req.session.firstname && req.session.lastname) {
+            res.render('index', {firstname:req.session.firstname, lastname: req.session.lastname, topics: topics, topic:topic[0]});
+          } else {
+            res.render('index', {topics:topics, topic:topic[0]});
+          }
         }
       });
     } else {
-      res.render('index', {topics:topics});
+      if(req.session.firstname && req.session.lastname) {
+        res.render('index', {firstname:req.session.firstname, lastname: req.session.lastname, topics: topics});
+      } else {
+        res.render('index', {topics:topics});
+      }
     }
   });
 });
@@ -110,7 +119,7 @@ app.post('/loginCheck', function(req,res) {
               req.session.save(function() {
                 console.log(req.session);
                 // res.send(req.session);
-                res.redirect('/welcome');
+                res.redirect('/');
               });
             } else {
               res.send('wrong password<p><a href="/signin">Sign in</a></p>');
@@ -121,6 +130,62 @@ app.post('/loginCheck', function(req,res) {
     }
   });
 });
+
+app.get('/post',function(req,res) {
+
+  // var sql = 'SELECT id,title FROM topic';
+  // conn.query(sql, function(err, topics, fields){
+  //   var id = req.params.id;
+  //   if(id){
+  //     var sql = 'SELECT * FROM topic WHERE id=?';
+  //     conn.query(sql, [id], function(err, topic, fields){
+  //       if(err){
+  //         throwError(res,err);
+  //       } else {
+  //         if(req.session.firstname && req.session.lastname) {
+  //           res.render('post', {firstname:req.session.firstname, lastname: req.session.lastname, topics: topics, topic:topic[0]});
+  //         } else {
+  //           res.render('post', {topics:topics, topic:topic[0]});
+  //         }
+  //       }
+  //     });
+  //   }
+  // });
+  var sql = 'SELECT * FROM topic';
+  conn.query(sql,function(err,topics,fields) {
+    if(err) {
+      throwError(res,err);
+    } else {
+      // var hi = {'a':'b'};
+      // console.log(JSON.stringify(req.session));
+      // console.log(req.session.firstname);
+      var session = req.session;
+      res.render('post', {firstname:session.firstname, lastname:session.lastname, topics:topics});
+    }
+  });
+});
+
+app.get('/pug/css/:name', function(req,res) {
+  fs.readFile('./pug/css/' + req.params.name, function(err,data) {
+    if(err) {
+      throwError(res,err);
+    } else {
+      res.send(data);
+    }
+  });
+});
+
+app.get('/post/:id',function(req,res) {
+  var sql = 'SELECT * FROM topic';
+  conn.query(sql,function(err,topics,fields) {
+    if(err) {
+      throwError(res,err);
+    } else {
+      res.render('post_showing',{firstname:req.session.firstname, lastname:req.session.lastname, topics:topics});
+    }
+  });
+});
+
 
 app.get('/welcome', function(req,res) {
   // res.send(req.session);
@@ -137,7 +202,7 @@ app.get('/signout', function(req,res) {
   delete req.session.firstname;
   delete req.session.lastname;
   req.session.save(function() {
-    res.redirect('/welcome');
+    res.redirect('/');
   });
 });
 
@@ -183,7 +248,7 @@ app.post('/signup', function(req,res) {
                 req.session.firstname = body.firstname;
                 req.session.lastname = body.lastname;
                 req.session.save(function() {
-                  res.redirect('/welcome');
+                  res.redirect('/');
                 });
               }
             });
@@ -192,6 +257,10 @@ app.post('/signup', function(req,res) {
       });
     }
   });
+});
+
+app.get('/diary',function(req,res) {
+  res.send('hi');
 });
 
 app.get('/pugtest',function(req,res) {

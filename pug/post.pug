@@ -1,0 +1,9 @@
+extends main_template.pug
+block title
+  |Post page
+block content
+  ul
+    each topic in topics
+      li
+        a(href='/post/' + topic.id)= topic.title
+  div: a(href='/writingPost') New Topic

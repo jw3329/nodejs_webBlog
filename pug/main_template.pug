@@ -1,0 +1,21 @@
+html
+  head
+    title: block title
+    meta(charset='utf-8')
+    link(rel='stylesheet' type='text/css' href='/pug/css/main.css')
+  body
+    header
+      a.mainHeader(href='/') Home
+
+      if firstname && lastname
+        div.sign
+          ul
+            li: p Welcome, #{firstname} #{lastname}
+            li: a(href='/signout') Sign out
+      else
+        div.sign
+          ul
+            li: a(href='/signin') Sign in
+            li: a(href='/signup') Sign up
+    nav.navbar:  include nav.pug
+    article: block content

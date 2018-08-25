@@ -1,0 +1,44 @@
+nav.navbar {
+  text-align: center;
+}
+
+nav.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333333;
+}
+
+nav.navbar li {
+  display: inline-block;
+  float: left;
+}
+
+nav.navbar li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 16px;
+  text-decoration: none;
+}
+
+.sign {
+  float: right;
+}
+
+.sign ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.sign li {
+  display: inline-block;
+  text-align: center;
+}
+
+a.mainHeader {
+  font-size: 40px;
+}

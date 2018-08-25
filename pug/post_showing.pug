@@ -1,0 +1,13 @@
+extends main_template.pug
+block title
+  |Post showing
+block content
+  if topic
+    h2= topic.title
+    = topic.description
+    div= 'by' + topic.author
+  else
+    h2 Homepage
+    | NodeJs learning
+  p:  a(href='/post') Back to list
+  p:  a(href='/writingPost') New post
