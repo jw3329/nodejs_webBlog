@@ -1,0 +1,13 @@
+extends main_template.pug
+
+block title
+  |Diary Post
+
+block content
+  h1 Title: #{row.title}
+  h3 Author: #{row.author}
+  h4 Created: #{row.created}
+  p Description: #{row.description}
+  p: a(href='/diary') Back to list
+  p: a(href='/diary/new') New Diary
+  p: a(href='/diary/' + row.id + '/delete') Delete Diary

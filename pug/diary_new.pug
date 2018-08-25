@@ -1,0 +1,10 @@
+extends main_template.pug
+
+block title
+  |New Diary
+
+block content
+  form(action='/diary/new/process', method = 'post')
+    p: input(type='text' name='title' placeholder='Title' style='width:80%')
+    p: textarea(name='description' placeholder='Start your diary' style='width:80%; height:40%' )
+    p: input(type='submit')

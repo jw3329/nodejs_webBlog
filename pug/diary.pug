@@ -1,0 +1,19 @@
+extends main_template.pug
+
+block title
+  |Diary
+
+block content
+  table.diary(style = 'width:100%')
+    tr
+      th Id
+      th(style='width:80%') Title
+      th Author
+      th Created
+    each row in rows
+      tr
+        td: =row.id
+        td: a(href='/diary/' + row.id)= row.title
+        td: =row.author
+        td: =row.created
+  p: a(href='/diary/new') New Diary

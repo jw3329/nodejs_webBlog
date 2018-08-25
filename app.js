@@ -20,6 +20,13 @@ app.use(session({
   // cookie: { secure: true }
 }));
 
+app.use(function(req,res,next){
+   res.locals.firstname = req.session.firstname;
+   res.locals.lastname = req.session.lastname;
+   res.locals.id = req.session.id;
+   next();
+});
+
 conn.connect();
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -62,7 +69,7 @@ app.get(['/', '/topic/:id'], function(req, res){
           throwError(res,err);
         } else {
           if(req.session.firstname && req.session.lastname) {
-            res.render('index', {firstname:req.session.firstname, lastname: req.session.lastname, topics: topics, topic:topic[0]});
+            res.render('index', {topics: topics, topic:topic[0]});
           } else {
             res.render('index', {topics:topics, topic:topic[0]});
           }
@@ -70,7 +77,7 @@ app.get(['/', '/topic/:id'], function(req, res){
       });
     } else {
       if(req.session.firstname && req.session.lastname) {
-        res.render('index', {firstname:req.session.firstname, lastname: req.session.lastname, topics: topics});
+        res.render('index', {topics: topics});
       } else {
         res.render('index', {topics:topics});
       }
@@ -114,12 +121,18 @@ app.post('/loginCheck', function(req,res) {
             throwError(res,err);
           } else {
             if(result) {
+              req.session.userId = row.id;
               req.session.firstname = row.firstname;
               req.session.lastname = row.lastname;
               req.session.save(function() {
                 console.log(req.session);
                 // res.send(req.session);
-                res.redirect('/');
+                if(req.session.write) {
+                  delete req.session.write;
+                  res.redirect('/diary/new');
+                } else {
+                  res.redirect('/');
+                }
               });
             } else {
               res.send('wrong password<p><a href="/signin">Sign in</a></p>');
@@ -160,7 +173,7 @@ app.get('/post',function(req,res) {
       // console.log(JSON.stringify(req.session));
       // console.log(req.session.firstname);
       var session = req.session;
-      res.render('post', {firstname:session.firstname, lastname:session.lastname, topics:topics});
+      res.render('post', {topics:topics});
     }
   });
 });
@@ -181,26 +194,19 @@ app.get('/post/:id',function(req,res) {
     if(err) {
       throwError(res,err);
     } else {
-      res.render('post_showing',{firstname:req.session.firstname, lastname:req.session.lastname, topics:topics});
+      res.render('post_showing', {topics:topics});
     }
   });
 });
 
-
 app.get('/welcome', function(req,res) {
-  // res.send(req.session);
-  // console.log(req.session);
-  // res.send(req.session);
-  if(req.session.firstname && req.session.lastname) {
-    res.render('welcome',{firstname:req.session.firstname,lastname:req.session.lastname});
-  } else {
-    res.render('welcome');
-  }
+  res.render('welcome');
 });
 
 app.get('/signout', function(req,res) {
   delete req.session.firstname;
   delete req.session.lastname;
+  delete req.session.userId;
   req.session.save(function() {
     res.redirect('/');
   });
@@ -245,6 +251,7 @@ app.post('/signup', function(req,res) {
               if(err) {
                 throwError(res,err3);
               } else {
+                req.session.userId = rowId[0].id;
                 req.session.firstname = body.firstname;
                 req.session.lastname = body.lastname;
                 req.session.save(function() {
@@ -259,8 +266,81 @@ app.post('/signup', function(req,res) {
   });
 });
 
+app.get('/diary/:id(\\d+)/delete', function(req,res) {
+  if(!req.session.id) {
+    res.render('different_id');
+  } else {
+    var sql = 'SELECT userId FROM diary WHERE id = ?';
+    var id = req.params.id;
+    conn.query(sql,[id],function(err,rows,fields) {
+      if(err) {
+        throwError(res,err);
+      } else {
+        if(rows[0].userId == req.session.userId) {
+          var sql = 'DELETE FROM diary WHERE id = ?';
+          conn.query(sql,[id],function(err,rows,fields) {
+            if(err) {
+              throwError(res,err);
+            } else {
+              res.redirect('/diary');
+            }
+          });
+        } else {
+          res.render('different_id');
+        }
+      }
+    });
+  }
+});
+
+app.get('/diary/:id(\\d+)',function(req,res) {
+  var id = req.params.id;
+  var sql = 'SELECT * FROM diary WHERE id = ?';
+  conn.query(sql,[id],function(err,rows,fields) {
+    if(err) {
+      throwError(res,err);
+    } else {
+      if(rows.length === 0) {
+        res.send('Invalid id');
+      } else {
+        res.render('diary_post',{row:rows[0]});
+      }
+    }
+  });
+});
+
+app.get('/diary/new', function(req,res) {
+  if(req.session.firstname) {
+    res.render('diary_new');
+  } else {
+    req.session.write = true;
+    req.session.save(function() {
+      res.render('diary_err');
+    });
+  }
+});
+
+app.post('/diary/new/process', function(req,res) {
+  var sql = 'INSERT INTO diary (title,description,author,userId,created) VALUES (?,?,?,?,NOW())';
+  var body = req.body;
+  conn.query(sql,[body.title,body.description,`${req.session.firstname} ${req.session.lastname}`,req.session.userId], function(err,rows,fields) {
+    if(err) {
+      throwError(res,err);
+    } else {
+      res.redirect('/diary');
+    }
+  });
+});
+
 app.get('/diary',function(req,res) {
-  res.send('hi');
+  var sql = 'SELECT * FROM diary';
+  conn.query(sql,function(err,rows,fields) {
+    if(err) {
+      throwError(res,err);
+    } else {
+      res.render('diary',{rows:rows});
+    }
+  });
 });
 
 app.get('/pugtest',function(req,res) {
